@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { recieveMessageRoute, sendMessageRoute } from "../api/api";
 import ChatInput from "./Input";
@@ -85,19 +84,16 @@ export default function ChatContainer({ currentChat, socket }) {
     }
   }, [socket]);
 
-  // Append new arrival messages to the chat
   useEffect(() => {
     if (arrivalMessage) {
       setMessages((prevMessages) => [...prevMessages, arrivalMessage]);
     }
   }, [arrivalMessage]);
 
-  // Scroll to the latest message
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   const formatDate = (timestamp) => {
-    // Handle string or Date object by default
     return new Date(timestamp).toLocaleString();
   };
 
@@ -124,12 +120,10 @@ export default function ChatContainer({ currentChat, socket }) {
               <small className="text-gray-800">
                 {formatDate(message.createdAt)}
               </small>{" "}
-              {/* Render the date */}
             </div>
           </div>
         ))}
         <div ref={scrollRef}></div>{" "}
-        {/* This will ensure the last element gets scrolled into view */}
       </div>
       <div className="bottom-0 w-full">
         <ChatInput handleSendMsg={handleSendMsg} />

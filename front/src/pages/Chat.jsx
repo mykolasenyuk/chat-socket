@@ -1,5 +1,3 @@
-import Container from "../components/Container"; // Ensure this import is used if Container is part of your layout
-import Contacts from "../components/Contacts";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,21 +8,22 @@ import {
 } from "../api/api";
 import axios from "axios";
 import { io } from "socket.io-client";
+import { toast } from "react-toastify";
+
+import Contacts from "../components/Contacts";
 import ChatContainer from "../components/ChatContainer";
 import GlobalChat from "../components/GlobalChat";
-import { toast } from "react-toastify";
 import Logout from "../components/LogoutButton";
 
 function Chat() {
   const navigate = useNavigate();
   const socket = useRef(null);
-  const audioRef = useRef(null); // Create a ref for the audio element
   const [isGlobalChat, setIsGlobalChat] = useState(true);
   const [contacts, setContacts] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
   const [currentUser, setCurrentUser] = useState(undefined);
   const [globalMessages, setGlobalMessages] = useState([]);
-  const [originalTitle, setOriginalTitle] = useState(document.title); // Keep track of the original title
+  const [originalTitle, setOriginalTitle] = useState(document.title);
 
   useEffect(() => {
     const initUser = async () => {
@@ -61,10 +60,7 @@ function Chat() {
           return prevMessages;
         }
 
-        // Change the page title to notify about the new message
-        document.title = `👀 + New Message`;
-
-        // Revert back to the original title after 3 seconds
+        document.title = "👀 New Message";
         setTimeout(() => {
           document.title = originalTitle;
         }, 4000);
@@ -73,9 +69,12 @@ function Chat() {
           ...prevMessages,
           {
             sender: { username: msg.senderName },
-            message: { text: msg.message },
+            message: msg.isAudio
+              ? { voice: msg.message }
+              : { text: msg.message },
             id: msg.id,
             createdAt: msg.createdAt,
+            isAudio: msg.isAudio,
           },
         ];
       });
@@ -96,7 +95,6 @@ function Chat() {
       });
 
       socket.current.on("user-joined", (data) => {
-        console.log(data.message);
         if (data.userId !== currentUser._id) {
           toast.info(data.message);
         }
@@ -140,14 +138,12 @@ function Chat() {
     if (messageContent.trim().length > 0 || isAudio) {
       const messageObject = {
         sender: currentUser._id,
-        message: messageContent.trim(), // Directly the message content, not an object
+        message: messageContent.trim(),
         senderName: currentUser.username,
         id: messageId,
         createdAt,
-        isAudio, // Indicate if the message is audio
+        isAudio,
       };
-
-      console.log("Sending message object to the backend:", messageObject); // Log this to verify data
 
       socket.current.emit("send-global-message", messageObject);
       setGlobalMessages((prevMessages) => [
@@ -159,7 +155,7 @@ function Chat() {
             : { text: messageContent.trim() },
           id: messageId,
           createdAt,
-          isAudio, // Correctly set the flag here too
+          isAudio,
         },
       ]);
 
@@ -178,26 +174,20 @@ function Chat() {
     setIsGlobalChat(true);
   };
 
-  useEffect(() => {
-    if (socket.current) {
-      socket.current.on("user-joined", (data) => {
-        console.log(data.message);
-        // You can also update the state to display this message in the UI
-      });
-    }
-  }, []);
-
   return (
     <div className="flex items-center bg-gray-500 justify-center min-h-screen p-4">
       <div className="w-11/12 flex justify-between p-4 bg-cyan-900 border rounded-lg h-full shadow-md">
         <div className="flex flex-col w-3/12 h-full justify-between">
-          <Logout />
-          <button
-            className="mr-auto p-2 border rounded-2xl text-amber-50 bg-red-400 hover:scale-95 ease-in-out duration-300"
-            onClick={openGlobalChat}
-          >
-            General chat
-          </button>
+          <div className={"w-full flex justify-between items-center"}>
+            <Logout />
+            <button
+              className=" p-2 border rounded-2xl text-amber-50 bg-red-400 hover:scale-95 ease-in-out duration-300"
+              onClick={openGlobalChat}
+            >
+              General chat
+            </button>
+          </div>
+
           <div className="p-2">
             <h2 className="text-3xl text-amber-50">Contacts:</h2>
             <Contacts

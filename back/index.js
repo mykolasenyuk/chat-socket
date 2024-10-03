@@ -80,7 +80,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send-global-message", (message) => {
-    io.to("global-chat").emit("receive-global-message", message); // Broadcast to all connected clients
+    io.to("global-chat").emit("receive-global-message", message);
+    console.log(message); // Broadcast to all connected clients
   });
 
   socket.on("add-user", (userId) => {

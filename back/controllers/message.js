@@ -1,51 +1,45 @@
-const {Messages} = require("../models");
+const { Messages } = require("../models");
 
 module.exports.getMessages = async (req, res, next) => {
-    try {
-        const { from, to } = req.body;
+  try {
+    const { from, to } = req.body;
 
-        const messages = await Messages.find({
-            users: {
-                $all: [from, to],
-            },
-        }).sort({ updatedAt: 1 });
+    const messages = await Messages.find({
+      users: {
+        $all: [from, to],
+      },
+    }).sort({ updatedAt: 1 });
 
-        const projectedMessages = messages.map((msg) => {
-            return {
-                fromSelf: msg.sender.toString() === from,
-                message: msg.message.text,
-                createdAt:msg.createdAt
-            };
-        });
-        res.json(projectedMessages);
-    } catch (ex) {
-        next(ex);
-    }
+    const projectedMessages = messages.map((msg) => {
+      return {
+        fromSelf: msg.sender.toString() === from,
+        message: msg.message.text,
+        createdAt: msg.createdAt,
+      };
+    });
+    res.json(projectedMessages);
+  } catch (ex) {
+    next(ex);
+  }
 };
 
-
 module.exports.addMessage = async (req, res, next) => {
-    try {
-        const { from, to, message } = req.body;
+  try {
+    const { from, to, message } = req.body;
 
-        // Debugging output
-        console.log("Received message data:", { from, to, message });
+    const data = await Messages.create({
+      message: { text: message },
+      users: [from, to],
+      sender: from,
+    });
 
-        const data = await Messages.create({
-            message: { text: message },
-            users: [from, to],
-            sender: from,
-        });
-
-        if (data) {
-            console.log("Message added successfully:", data);
-            return res.json({ msg: "Message added successfully." });
-        } else {
-            console.error("Failed to add message to the database");
-            return res.json({ msg: "Failed to add message to the database" });
-        }
-    } catch (ex) {
-        console.error("Error in addMessage:", ex);
-        next(ex);
+    if (data) {
+      return res.json({ msg: "Message added successfully." });
+    } else {
+      return res.json({ msg: "Failed to add message to the database" });
     }
+  } catch (ex) {
+    console.error("Error in addMessage:", ex);
+    next(ex);
+  }
 };

@@ -16,7 +16,12 @@ export default function Logout() {
     }
   };
   return (
-    <button className={"p-2 rounded-full border"} onClick={handleClick}>
+    <button
+      className={
+        "p-2 w-8 h-8 flex items-center justify-center rounded-full border bg-amber-600 text-amber-50 hover:bg-red-500 hover:scale-95 ease-in-out duration-300"
+      }
+      onClick={handleClick}
+    >
       <BiPowerOff />
     </button>
   );
